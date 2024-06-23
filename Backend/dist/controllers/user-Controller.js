@@ -2,7 +2,20 @@ import { User } from "../models/user.model.js";
 export const userController = async (req, res, next) => {
     try {
         const { name, email, photo, dob, gender, _id } = req.body;
-        const user = await User.create({
+        let user = await User.findById(_id);
+        if (user) {
+            return res.status(200).json({
+                sucess: true,
+                message: `welcome ${user.name}`,
+            });
+        }
+        if (!name || !email || !photo || !dob || !gender || !_id) {
+            return res.status(401).json({
+                success: false,
+                message: "Please Enter all fields",
+            });
+        }
+        user = await User.create({
             name,
             email,
             photo,
@@ -12,11 +25,29 @@ export const userController = async (req, res, next) => {
         });
         return res
             .status(201)
-            .json({ sucess: true, message: "user created successfully" });
+            .json({ sucess: true, message: "user created successfully", user });
     }
     catch (error) {
-        return res
-            .status(500)
-            .json({ sucess: false, message: "user creation failed" });
+        res.status(501).json({
+            sucess: false,
+            mesage: "Internal server error",
+            error,
+        });
+    }
+};
+export const getAllUsers = async (req, res, next) => {
+    try {
+        const user = await User.find({});
+        return res.status(200).json({
+            sucess: true,
+            message: "get all users",
+            user
+        });
+    }
+    catch (error) {
+        return res.status(501).json({
+            sucess: false,
+            message: "user not found",
+        });
     }
 };
