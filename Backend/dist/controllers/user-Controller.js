@@ -41,13 +41,50 @@ export const getAllUsers = async (req, res, next) => {
         return res.status(200).json({
             sucess: true,
             message: "get all users",
-            user
+            user,
         });
     }
     catch (error) {
         return res.status(501).json({
             sucess: false,
             message: "user not found",
+        });
+    }
+};
+export const getUser = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(400).json({
+                sucess: false,
+                message: "Invalid id & user Not found",
+            });
+        }
+        return res.status(200).json({
+            sucess: true,
+            user,
+        });
+    }
+    catch (error) { }
+};
+export const deleteUser = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(400).json({
+                sucess: false,
+                message: "User deleted successfully",
+                user,
+            });
+        }
+        await user.deleteOne();
+    }
+    catch (error) {
+        return res.status(501).json({
+            sucess: false,
+            message: "User delete failed",
         });
     }
 };
