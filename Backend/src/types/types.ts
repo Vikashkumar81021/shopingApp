@@ -7,3 +7,10 @@ export interface NewUserRequestbody{
     gender:string,
     _id:string
 }
+
+export interface NewProductRequestbody{
+    name:string,
+    category:string,
+  price:number,
+  stock:number
+}
