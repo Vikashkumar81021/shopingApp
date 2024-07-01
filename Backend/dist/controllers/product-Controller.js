@@ -89,6 +89,12 @@ export const adminProduct = async (req, res, next) => {
 export const singleProduct = async (req, res, next) => {
     try {
         const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(400).json({
+                sucess: false,
+                message: "Product not found",
+            });
+        }
         return res.status(200).json({
             sucess: true,
             message: "Get single product",
@@ -137,10 +143,71 @@ export const updateProduct = async (req, res, next) => {
         });
     }
     catch (error) {
-        console.error('Error updating product');
+        console.error("Error updating product");
         return res.status(500).json({
             success: false,
             message: "Product update failed",
+        });
+    }
+};
+export const deleteProduct = async (req, res, next) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({
+                sucess: false,
+                message: "Product not found",
+            });
+        }
+        rm(updateProduct.photo, () => {
+            console.log("Product photo delete");
+        });
+        await product.deleteOne();
+        return res.status(200).json({
+            sucess: true,
+            message: "Product delete Sucessfully",
+            product,
+        });
+    }
+    catch (error) {
+        return res.status(501).json({
+            sucess: false,
+            message: "Product creation failed",
+        });
+    }
+};
+export const searchProduct = async (req, res, next) => {
+    try {
+        const { sort, search, price, category } = req.query;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(process.env.PRODUCT_PER_PAGE) || 8;
+        const skip = (page - 1) * limit;
+        const baseQuery = {
+            name: {
+                $regex: search,
+                $options: "1",
+            },
+            price: {
+                $lte: Number(price),
+            },
+            category,
+        };
+        if (search)
+            baseQuery.name = {
+                $regex: search,
+                $options: "1",
+            };
+        const product = await Product.find({ baseQuery });
+        return res.status(201).json({
+            message: "latest product",
+            sucess: true,
+            product,
+        });
+    }
+    catch (error) {
+        return res.status(501).json({
+            sucess: false,
+            message: "Product creation failed",
         });
     }
 };
