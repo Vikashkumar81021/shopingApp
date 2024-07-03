@@ -3,8 +3,10 @@ import userRoute from "./routes/user-route.js"
 import productRoute from "./routes/product-route.js"
 import { connectDB } from "./utils/db.js"
 import { errorMidleware } from "./middlewares/error.js"
+import NodeCache from "node-cache"
 const app=express()
 connectDB()
+export const nodeCache=new NodeCache({})
 const port=3000
 
 app.use("/uploads",express.static("uploads"))

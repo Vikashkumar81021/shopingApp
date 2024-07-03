@@ -1,5 +1,6 @@
 import { Product } from "../models/products.model.js";
 import { rm } from "fs";
+import { nodeCache } from "../app.js";
 export const productController = async (req, res, next) => {
     try {
         const { name, price, category, stock } = req.body;
@@ -40,7 +41,13 @@ export const productController = async (req, res, next) => {
 };
 export const latestProductController = async (req, res, next) => {
     try {
-        const product = await Product.find({}).sort({ createdAt: -1 }).limit(5);
+        let product;
+        if (nodeCache.has("latest-product"))
+            product = JSON.parse(nodeCache.get("latest-product"));
+        else {
+            product = await Product.find({}).sort({ createdAt: -1 }).limit(5);
+            nodeCache.set("latest-product", JSON.stringify(product));
+        }
         return res.status(201).json({
             message: "latest product",
             sucess: true,
@@ -184,24 +191,32 @@ export const searchProduct = async (req, res, next) => {
         const skip = (page - 1) * limit;
         const baseQuery = {
             name: {
-                $regex: search,
-                $options: "1",
+                $regex: "",
+                $options: ""
             },
             price: {
-                $lte: Number(price),
+                $lte: 0
             },
-            category,
+            category: ""
         };
         if (search)
             baseQuery.name = {
                 $regex: search,
                 $options: "1",
             };
-        const product = await Product.find({ baseQuery });
+        if (price)
+            baseQuery.price = {
+                $lte: Number(price),
+            };
+        if (category)
+            baseQuery.category = category;
+        const product = await Product.find(baseQuery).sort(sort ? { price: sort === "asc" ? 1 : -1 } : ).limit(limit).skip(skip);
+        const filteProduct = await Product.find({ baseQuery });
         return res.status(201).json({
             message: "latest product",
             sucess: true,
             product,
+            filteProduct
         });
     }
     catch (error) {
